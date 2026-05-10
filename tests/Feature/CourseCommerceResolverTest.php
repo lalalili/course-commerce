@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Lalalili\CourseCommerce\Data\CourseCheckoutResult;
 use Lalalili\CommerceCore\Models\Product;
 use Lalalili\CommerceCore\Models\ProductUser;
+use Lalalili\CourseCommerce\Data\CourseCheckoutResult;
 use Lalalili\CourseCommerce\Exceptions\CourseAlreadyPurchasedException;
 use Lalalili\CourseCommerce\Exceptions\CourseProductMissingException;
 use Lalalili\CourseCommerce\Support\CommerceCourseAccessResolver;
@@ -24,7 +24,7 @@ it('binds the course access and product resolvers', function (): void {
 
 it('resolves a course product from configured foreign keys', function (): void {
     $product = Product::query()->create([
-        'title'       => 'Course product',
+        'title' => 'Course product',
         'sales_price' => 1200,
     ]);
     $course = new TestCourse([
@@ -36,12 +36,12 @@ it('resolves a course product from configured foreign keys', function (): void {
 
 it('allows purchased users to view courses and paid units', function (): void {
     $product = Product::query()->create([
-        'title'       => 'Paid course',
+        'title' => 'Paid course',
         'sales_price' => 1200,
     ]);
     ProductUser::query()->create([
         'product_id' => $product->getKey(),
-        'user_id'    => 9,
+        'user_id' => 9,
         'created_at' => now(),
     ]);
 
@@ -62,11 +62,11 @@ it('allows purchased users to view courses and paid units', function (): void {
 
 it('allows free courses and free preview units without purchase', function (): void {
     $paidProduct = Product::query()->create([
-        'title'       => 'Course product',
+        'title' => 'Course product',
         'sales_price' => 1200,
     ]);
     $freeProduct = Product::query()->create([
-        'title'       => 'Free course product',
+        'title' => 'Free course product',
         'sales_price' => 0,
     ]);
 
@@ -87,11 +87,11 @@ it('allows free courses and free preview units without purchase', function (): v
 
 it('creates a commerce order for a course product', function (): void {
     $product = Product::query()->create([
-        'title'       => 'Paid course',
+        'title' => 'Paid course',
         'sales_price' => 1200,
     ]);
     $course = new TestCourse([
-        'id'         => 22,
+        'id' => 22,
         'product_id' => $product->getKey(),
     ]);
     $course->exists = true;
@@ -112,7 +112,7 @@ it('syncs a course product, creates an order, and returns a configured checkout 
     config()->set('course-commerce.checkout.payment_route', 'test.pay');
 
     $course = new TestCourse([
-        'id'    => 30,
+        'id' => 30,
         'title' => 'Laravel 線上課程',
         'price' => 1200,
     ]);
@@ -138,16 +138,16 @@ it('reports purchase status and builds payment result urls', function (): void {
     config()->set('course-commerce.checkout.result_route', 'test.course.result');
 
     $product = Product::query()->create([
-        'title'       => 'Paid course',
+        'title' => 'Paid course',
         'sales_price' => 1200,
     ]);
     ProductUser::query()->create([
         'product_id' => $product->getKey(),
-        'user_id'    => 9,
+        'user_id' => 9,
         'created_at' => now(),
     ]);
     $course = new TestCourse([
-        'id'         => 33,
+        'id' => 33,
         'product_id' => $product->getKey(),
     ]);
     $course->exists = true;
@@ -160,19 +160,19 @@ it('reports purchase status and builds payment result urls', function (): void {
 
     expect($status)->toMatchArray([
         'has_product' => true,
-        'purchased'   => true,
-        'can_view'    => true,
+        'purchased' => true,
+        'can_view' => true,
     ])
         ->and($url)->toContain('/courses/'.$course->getKey().'/orders/'.$order->getKey());
 });
 
 it('creates and binds a commerce product from course attributes', function (): void {
     $course = new TestCourse([
-        'id'         => 31,
-        'title'      => 'Laravel 線上課程',
-        'subtitle'   => '第一階段課程商品',
+        'id' => 31,
+        'title' => 'Laravel 線上課程',
+        'subtitle' => '第一階段課程商品',
         'list_price' => 1500,
-        'price'      => 1200,
+        'price' => 1200,
     ]);
 
     $product = app(CourseCommerceProductBindingService::class)->syncProductForCourse($course);
@@ -188,15 +188,15 @@ it('creates and binds a commerce product from course attributes', function (): v
 
 it('updates an existing bound commerce product from course attributes', function (): void {
     $product = Product::query()->create([
-        'title'       => '舊課程商品',
-        'list_price'  => 1000,
+        'title' => '舊課程商品',
+        'list_price' => 1000,
         'sales_price' => 800,
     ]);
     $course = new TestCourse([
-        'id'         => 32,
+        'id' => 32,
         'product_id' => $product->getKey(),
-        'title'      => '新課程商品',
-        'price'      => 900,
+        'title' => '新課程商品',
+        'price' => 900,
     ]);
 
     $syncedProduct = app(CourseCommerceProductBindingService::class)->syncProductForCourse($course, [
@@ -219,16 +219,16 @@ it('rejects checkout when a course has no commerce product binding', function ()
 
 it('rejects duplicate course purchases by default', function (): void {
     $product = Product::query()->create([
-        'title'       => 'Paid course',
+        'title' => 'Paid course',
         'sales_price' => 1200,
     ]);
     ProductUser::query()->create([
         'product_id' => $product->getKey(),
-        'user_id'    => 9,
+        'user_id' => 9,
         'created_at' => now(),
     ]);
     $course = new TestCourse([
-        'id'         => 24,
+        'id' => 24,
         'product_id' => $product->getKey(),
     ]);
     $course->exists = true;

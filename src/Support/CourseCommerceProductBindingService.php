@@ -35,20 +35,19 @@ class CourseCommerceProductBindingService
             'sale_price',
             'price',
         ],
+        'product_attribute_fields' => [],
     ];
 
     /**
      * @var array<string, mixed>
      */
     private const DEFAULT_PRODUCT_VALUES = [
-        'type'   => 1,
-        'tax'    => 1,
+        'type' => 1,
+        'tax' => 1,
         'active' => true,
     ];
 
-    public function __construct(private readonly CourseProductResolver $products)
-    {
-    }
+    public function __construct(private readonly CourseProductResolver $products) {}
 
     /**
      * @param  array<string, mixed>  $attributes
@@ -61,6 +60,7 @@ class CourseCommerceProductBindingService
         return DB::transaction(function () use ($course, $attributes, $productModel): Model {
             $product = $this->products->productForCourse($course);
             $productAttributes = array_merge($this->productAttributesFromCourse($course), $attributes);
+            $productAttributes = $this->filterModelAttributes($product ?? new $productModel, $productAttributes);
 
             if ($product instanceof Model) {
                 $product->forceFill($productAttributes)->save();
@@ -83,10 +83,10 @@ class CourseCommerceProductBindingService
         $listPrice = $this->firstInteger($course, $this->configuredFields('list_price_fields'));
         $salesPrice = $this->firstInteger($course, $this->configuredFields('sales_price_fields'));
 
-        return array_merge($this->defaults(), [
-            'title'       => $this->firstString($course, $this->configuredFields('title_fields')) ?: 'Untitled course',
-            'subtitle'    => $this->firstString($course, $this->configuredFields('subtitle_fields')),
-            'list_price'  => $listPrice ?? $salesPrice ?? 0,
+        return array_merge($this->defaults(), $this->mappedProductAttributes($course), [
+            'title' => $this->firstString($course, $this->configuredFields('title_fields')) ?: 'Untitled course',
+            'subtitle' => $this->firstString($course, $this->configuredFields('subtitle_fields')),
+            'list_price' => $listPrice ?? $salesPrice ?? 0,
             'sales_price' => $salesPrice ?? $listPrice ?? 0,
         ]);
     }
@@ -115,6 +115,17 @@ class CourseCommerceProductBindingService
         return $model->getConnection()
             ->getSchemaBuilder()
             ->hasColumn($model->getTable(), $column);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function filterModelAttributes(Model $model, array $attributes): array
+    {
+        return collect($attributes)
+            ->filter(fn (mixed $value, string $column): bool => $this->modelHasColumn($model, $column))
+            ->all();
     }
 
     private function bindingForeignKey(): ?string
@@ -150,6 +161,44 @@ class CourseCommerceProductBindingService
         }
 
         return $defaults === [] ? self::DEFAULT_PRODUCT_VALUES : $defaults;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mappedProductAttributes(Model $course): array
+    {
+        $fieldMap = config('course-commerce.course_product.product_attribute_fields', []);
+
+        if (! is_array($fieldMap)) {
+            return [];
+        }
+
+        $attributes = [];
+
+        foreach ($fieldMap as $productField => $courseFields) {
+            if (! is_string($productField) || $productField === '') {
+                continue;
+            }
+
+            $fields = is_array($courseFields) ? $courseFields : [$courseFields];
+
+            foreach ($fields as $courseField) {
+                if (! is_string($courseField) || $courseField === '') {
+                    continue;
+                }
+
+                $value = data_get($course, $courseField);
+
+                if ($value !== null && $value !== '') {
+                    $attributes[$productField] = $value;
+
+                    break;
+                }
+            }
+        }
+
+        return $attributes;
     }
 
     /**

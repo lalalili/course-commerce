@@ -6,9 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 class TestUser implements Authenticatable
 {
-    public function __construct(private readonly int $id)
-    {
-    }
+    public function __construct(private readonly int $id) {}
 
     public function getAuthIdentifierName(): string
     {
@@ -35,9 +33,7 @@ class TestUser implements Authenticatable
         return null;
     }
 
-    public function setRememberToken($value): void
-    {
-    }
+    public function setRememberToken($value): void {}
 
     public function getRememberTokenName(): string
     {

@@ -3,7 +3,6 @@
 namespace Lalalili\CourseCommerce\Support;
 
 use Illuminate\Database\Eloquent\Model;
-use Lalalili\CommerceCore\Models\Order;
 use Lalalili\CommerceCore\Services\OrderLifecycleService;
 use Lalalili\CourseCommerce\Data\CourseCheckoutResult;
 use Lalalili\CourseCommerce\Exceptions\CourseAlreadyPurchasedException;
@@ -18,8 +17,7 @@ class CourseCommerceCheckoutService
         private readonly CourseAccessResolver $access,
         private readonly OrderLifecycleService $orders,
         private readonly CourseCommerceProductBindingService $productBindings,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array<string, mixed>  $orderAttributes
@@ -45,7 +43,7 @@ class CourseCommerceCheckoutService
     /**
      * @param  array<string, mixed>  $attributes
      */
-    public function createOrderForCourse(int $userId, Model $course, array $attributes = []): Order
+    public function createOrderForCourse(int $userId, Model $course, array $attributes = []): Model
     {
         $product = $this->products->productForCourse($course);
 
@@ -63,12 +61,12 @@ class CourseCommerceCheckoutService
         return $this->orders->create($userId, [
             [
                 'product_id' => $product->getKey(),
-                'qty'        => 1,
+                'qty' => 1,
             ],
         ], $attributes);
     }
 
-    private function checkoutUrl(Order $order): ?string
+    private function checkoutUrl(Model $order): ?string
     {
         $routeName = config('course-commerce.checkout.payment_route');
 

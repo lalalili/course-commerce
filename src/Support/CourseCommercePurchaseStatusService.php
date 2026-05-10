@@ -12,8 +12,7 @@ class CourseCommercePurchaseStatusService
     public function __construct(
         private readonly CourseProductResolver $products,
         private readonly CourseAccessResolver $access,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{has_product: bool, purchased: bool, can_view: bool}
@@ -22,8 +21,8 @@ class CourseCommercePurchaseStatusService
     {
         return [
             'has_product' => $this->products->productForCourse($course) instanceof Model,
-            'purchased'   => $this->hasPurchased($user, $course),
-            'can_view'    => $this->canView($user, $course),
+            'purchased' => $this->hasPurchased($user, $course),
+            'can_view' => $this->canView($user, $course),
         ];
     }
 

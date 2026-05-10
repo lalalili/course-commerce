@@ -10,9 +10,7 @@ use Lalalili\CourseCore\Contracts\CourseProductResolver;
 
 class CommerceCourseAccessResolver implements CourseAccessResolver
 {
-    public function __construct(private readonly CourseProductResolver $productResolver)
-    {
-    }
+    public function __construct(private readonly CourseProductResolver $productResolver) {}
 
     public function canViewCourse(?Authenticatable $user, Model $course): bool
     {
