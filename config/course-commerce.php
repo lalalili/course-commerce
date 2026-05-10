@@ -9,6 +9,29 @@ return [
             'product_id',
             'commerce_product_id',
         ],
+        'title_fields' => [
+            'title',
+            'name',
+        ],
+        'subtitle_fields' => [
+            'subtitle',
+            'sub_title',
+        ],
+        'list_price_fields' => [
+            'list_price',
+            'price',
+            'origin_price',
+        ],
+        'sales_price_fields' => [
+            'sales_price',
+            'sale_price',
+            'price',
+        ],
+        'defaults' => [
+            'type'   => 1,
+            'tax'    => 1,
+            'active' => true,
+        ],
     ],
 
     'checkout' => [

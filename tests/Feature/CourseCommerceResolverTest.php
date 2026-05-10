@@ -7,6 +7,7 @@ use Lalalili\CourseCommerce\Exceptions\CourseProductMissingException;
 use Lalalili\CourseCommerce\Support\CommerceCourseAccessResolver;
 use Lalalili\CourseCommerce\Support\CommerceCourseProductResolver;
 use Lalalili\CourseCommerce\Support\CourseCommerceCheckoutService;
+use Lalalili\CourseCommerce\Support\CourseCommerceProductBindingService;
 use Lalalili\CourseCommerce\Tests\Models\TestCourse;
 use Lalalili\CourseCommerce\Tests\Models\TestUser;
 use Lalalili\CourseCore\Contracts\CourseAccessResolver;
@@ -100,6 +101,50 @@ it('creates a commerce order for a course product', function (): void {
         ->and($order->total_sales_price)->toBe(1200)
         ->and($order->details)->toHaveCount(1)
         ->and($order->details->first()?->product_id)->toBe($product->getKey());
+});
+
+it('creates and binds a commerce product from course attributes', function (): void {
+    $course = new TestCourse([
+        'id'         => 31,
+        'title'      => 'Laravel 線上課程',
+        'subtitle'   => '第一階段課程商品',
+        'list_price' => 1500,
+        'price'      => 1200,
+    ]);
+
+    $product = app(CourseCommerceProductBindingService::class)->syncProductForCourse($course);
+
+    expect($product)->toBeInstanceOf(Product::class)
+        ->and($product->title)->toBe('Laravel 線上課程')
+        ->and($product->subtitle)->toBe('第一階段課程商品')
+        ->and($product->list_price)->toBe(1500)
+        ->and($product->sales_price)->toBe(1200)
+        ->and($course->product_id)->toBe($product->getKey())
+        ->and(app(CourseProductResolver::class)->productForCourse($course)?->getKey())->toBe($product->getKey());
+});
+
+it('updates an existing bound commerce product from course attributes', function (): void {
+    $product = Product::query()->create([
+        'title'       => '舊課程商品',
+        'list_price'  => 1000,
+        'sales_price' => 800,
+    ]);
+    $course = new TestCourse([
+        'id'         => 32,
+        'product_id' => $product->getKey(),
+        'title'      => '新課程商品',
+        'price'      => 900,
+    ]);
+
+    $syncedProduct = app(CourseCommerceProductBindingService::class)->syncProductForCourse($course, [
+        'number' => 'COURSE-32',
+    ]);
+
+    expect($syncedProduct->getKey())->toBe($product->getKey())
+        ->and($syncedProduct->title)->toBe('新課程商品')
+        ->and($syncedProduct->number)->toBe('COURSE-32')
+        ->and($syncedProduct->sales_price)->toBe(900)
+        ->and(Product::query()->count())->toBe(1);
 });
 
 it('rejects checkout when a course has no commerce product binding', function (): void {
