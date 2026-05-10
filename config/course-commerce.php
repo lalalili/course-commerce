@@ -36,6 +36,11 @@ return [
 
     'checkout' => [
         'prevent_duplicate_purchase' => true,
+        'payment_route'              => null,
+        'payment_route_parameter'    => 'order',
+        'result_route'               => null,
+        'result_route_order_key'     => 'order',
+        'result_route_course_key'    => 'course',
     ],
 
     'access' => [

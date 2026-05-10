@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Lalalili\CourseCommerce\Data\CourseCheckoutResult;
 use Lalalili\CommerceCore\Models\Product;
 use Lalalili\CommerceCore\Models\ProductUser;
 use Lalalili\CourseCommerce\Exceptions\CourseAlreadyPurchasedException;
@@ -8,6 +10,8 @@ use Lalalili\CourseCommerce\Support\CommerceCourseAccessResolver;
 use Lalalili\CourseCommerce\Support\CommerceCourseProductResolver;
 use Lalalili\CourseCommerce\Support\CourseCommerceCheckoutService;
 use Lalalili\CourseCommerce\Support\CourseCommerceProductBindingService;
+use Lalalili\CourseCommerce\Support\CourseCommercePurchaseStatusService;
+use Lalalili\CourseCommerce\Support\CourseCommerceRedirectService;
 use Lalalili\CourseCommerce\Tests\Models\TestCourse;
 use Lalalili\CourseCommerce\Tests\Models\TestUser;
 use Lalalili\CourseCore\Contracts\CourseAccessResolver;
@@ -101,6 +105,65 @@ it('creates a commerce order for a course product', function (): void {
         ->and($order->total_sales_price)->toBe(1200)
         ->and($order->details)->toHaveCount(1)
         ->and($order->details->first()?->product_id)->toBe($product->getKey());
+});
+
+it('syncs a course product, creates an order, and returns a configured checkout url', function (): void {
+    Route::get('/pay/{order}', fn (string $order): string => $order)->name('test.pay');
+    config()->set('course-commerce.checkout.payment_route', 'test.pay');
+
+    $course = new TestCourse([
+        'id'    => 30,
+        'title' => 'Laravel 線上課程',
+        'price' => 1200,
+    ]);
+    $course->exists = true;
+
+    $result = app(CourseCommerceCheckoutService::class)->checkoutCourse(9, $course, [
+        'number' => '260510CHECK1',
+    ], [
+        'number' => 'COURSE-30',
+    ]);
+
+    expect($result)->toBeInstanceOf(CourseCheckoutResult::class)
+        ->and($result->product->number)->toBe('COURSE-30')
+        ->and($result->order->number)->toBe('260510CHECK1')
+        ->and($result->order->total_sales_price)->toBe(1200)
+        ->and($result->checkoutUrl)->toContain('/pay/'.$result->order->getKey())
+        ->and($course->product_id)->toBe($result->product->getKey());
+});
+
+it('reports purchase status and builds payment result urls', function (): void {
+    Route::get('/courses/{course}/orders/{order}', fn (string $course, string $order): string => "{$course}:{$order}")
+        ->name('test.course.result');
+    config()->set('course-commerce.checkout.result_route', 'test.course.result');
+
+    $product = Product::query()->create([
+        'title'       => 'Paid course',
+        'sales_price' => 1200,
+    ]);
+    ProductUser::query()->create([
+        'product_id' => $product->getKey(),
+        'user_id'    => 9,
+        'created_at' => now(),
+    ]);
+    $course = new TestCourse([
+        'id'         => 33,
+        'product_id' => $product->getKey(),
+    ]);
+    $course->exists = true;
+    $order = app(CourseCommerceCheckoutService::class)->createOrderForCourse(10, $course, [
+        'number' => '260510RESULT1',
+    ]);
+
+    $status = app(CourseCommercePurchaseStatusService::class)->status(new TestUser(9), $course);
+    $url = app(CourseCommerceRedirectService::class)->paymentResultUrl($order, $course);
+
+    expect($status)->toMatchArray([
+        'has_product' => true,
+        'purchased'   => true,
+        'can_view'    => true,
+    ])
+        ->and($url)->toContain('/courses/'.$course->getKey().'/orders/'.$order->getKey());
 });
 
 it('creates and binds a commerce product from course attributes', function (): void {

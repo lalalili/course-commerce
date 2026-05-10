@@ -5,6 +5,7 @@ namespace Lalalili\CourseCommerce\Support;
 use Illuminate\Database\Eloquent\Model;
 use Lalalili\CommerceCore\Models\Order;
 use Lalalili\CommerceCore\Services\OrderLifecycleService;
+use Lalalili\CourseCommerce\Data\CourseCheckoutResult;
 use Lalalili\CourseCommerce\Exceptions\CourseAlreadyPurchasedException;
 use Lalalili\CourseCommerce\Exceptions\CourseProductMissingException;
 use Lalalili\CourseCore\Contracts\CourseAccessResolver;
@@ -16,7 +17,29 @@ class CourseCommerceCheckoutService
         private readonly CourseProductResolver $products,
         private readonly CourseAccessResolver $access,
         private readonly OrderLifecycleService $orders,
+        private readonly CourseCommerceProductBindingService $productBindings,
     ) {
+    }
+
+    /**
+     * @param  array<string, mixed>  $orderAttributes
+     * @param  array<string, mixed>  $productAttributes
+     */
+    public function checkoutCourse(
+        int $userId,
+        Model $course,
+        array $orderAttributes = [],
+        array $productAttributes = [],
+    ): CourseCheckoutResult {
+        $product = $this->productBindings->syncProductForCourse($course, $productAttributes);
+        $order = $this->createOrderForCourse($userId, $course, $orderAttributes);
+
+        return new CourseCheckoutResult(
+            course: $course,
+            product: $product,
+            order: $order,
+            checkoutUrl: $this->checkoutUrl($order),
+        );
     }
 
     /**
@@ -43,5 +66,20 @@ class CourseCommerceCheckoutService
                 'qty'        => 1,
             ],
         ], $attributes);
+    }
+
+    private function checkoutUrl(Order $order): ?string
+    {
+        $routeName = config('course-commerce.checkout.payment_route');
+
+        if (! is_string($routeName) || $routeName === '') {
+            return null;
+        }
+
+        $parameter = config('course-commerce.checkout.payment_route_parameter', 'order');
+
+        return route($routeName, [
+            is_string($parameter) && $parameter !== '' ? $parameter : 'order' => $order->getKey(),
+        ]);
     }
 }

@@ -6,6 +6,8 @@ use Lalalili\CourseCommerce\Support\CommerceCourseAccessResolver;
 use Lalalili\CourseCommerce\Support\CommerceCourseProductResolver;
 use Lalalili\CourseCommerce\Support\CourseCommerceCheckoutService;
 use Lalalili\CourseCommerce\Support\CourseCommerceProductBindingService;
+use Lalalili\CourseCommerce\Support\CourseCommercePurchaseStatusService;
+use Lalalili\CourseCommerce\Support\CourseCommerceRedirectService;
 use Lalalili\CourseCore\Contracts\CourseAccessResolver;
 use Lalalili\CourseCore\Contracts\CourseProductResolver;
 use Spatie\LaravelPackageTools\Package;
@@ -26,6 +28,8 @@ class CourseCommerceServiceProvider extends PackageServiceProvider
         $this->app->singleton(CommerceCourseAccessResolver::class);
         $this->app->singleton(CourseCommerceCheckoutService::class);
         $this->app->singleton(CourseCommerceProductBindingService::class);
+        $this->app->singleton(CourseCommercePurchaseStatusService::class);
+        $this->app->singleton(CourseCommerceRedirectService::class);
     }
 
     public function packageBooted(): void
