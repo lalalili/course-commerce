@@ -4,6 +4,7 @@ namespace Lalalili\CourseCommerce;
 
 use Lalalili\CourseCommerce\Support\CommerceCourseAccessResolver;
 use Lalalili\CourseCommerce\Support\CommerceCourseProductResolver;
+use Lalalili\CourseCommerce\Support\CourseCommerceCheckoutService;
 use Lalalili\CourseCore\Contracts\CourseAccessResolver;
 use Lalalili\CourseCore\Contracts\CourseProductResolver;
 use Spatie\LaravelPackageTools\Package;
@@ -22,6 +23,7 @@ class CourseCommerceServiceProvider extends PackageServiceProvider
     {
         $this->app->singleton(CommerceCourseProductResolver::class);
         $this->app->singleton(CommerceCourseAccessResolver::class);
+        $this->app->singleton(CourseCommerceCheckoutService::class);
     }
 
     public function packageBooted(): void

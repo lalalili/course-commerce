@@ -2,8 +2,11 @@
 
 use Lalalili\CommerceCore\Models\Product;
 use Lalalili\CommerceCore\Models\ProductUser;
+use Lalalili\CourseCommerce\Exceptions\CourseAlreadyPurchasedException;
+use Lalalili\CourseCommerce\Exceptions\CourseProductMissingException;
 use Lalalili\CourseCommerce\Support\CommerceCourseAccessResolver;
 use Lalalili\CourseCommerce\Support\CommerceCourseProductResolver;
+use Lalalili\CourseCommerce\Support\CourseCommerceCheckoutService;
 use Lalalili\CourseCommerce\Tests\Models\TestCourse;
 use Lalalili\CourseCommerce\Tests\Models\TestUser;
 use Lalalili\CourseCore\Contracts\CourseAccessResolver;
@@ -76,3 +79,51 @@ it('allows free courses and free preview units without purchase', function (): v
     expect($resolver->canViewCourse(null, $freeCourse))->toBeTrue()
         ->and($resolver->canAccessUnit(null, $paidCourse, $freeUnit))->toBeTrue();
 });
+
+it('creates a commerce order for a course product', function (): void {
+    $product = Product::query()->create([
+        'title'       => 'Paid course',
+        'sales_price' => 1200,
+    ]);
+    $course = new TestCourse([
+        'id'         => 22,
+        'product_id' => $product->getKey(),
+    ]);
+    $course->exists = true;
+
+    $order = app(CourseCommerceCheckoutService::class)->createOrderForCourse(9, $course, [
+        'number' => '260510COURSE1',
+    ]);
+
+    expect($order->number)->toBe('260510COURSE1')
+        ->and($order->user_id)->toBe(9)
+        ->and($order->total_sales_price)->toBe(1200)
+        ->and($order->details)->toHaveCount(1)
+        ->and($order->details->first()?->product_id)->toBe($product->getKey());
+});
+
+it('rejects checkout when a course has no commerce product binding', function (): void {
+    $course = new TestCourse(['id' => 23]);
+    $course->exists = true;
+
+    app(CourseCommerceCheckoutService::class)->createOrderForCourse(9, $course);
+})->throws(CourseProductMissingException::class);
+
+it('rejects duplicate course purchases by default', function (): void {
+    $product = Product::query()->create([
+        'title'       => 'Paid course',
+        'sales_price' => 1200,
+    ]);
+    ProductUser::query()->create([
+        'product_id' => $product->getKey(),
+        'user_id'    => 9,
+        'created_at' => now(),
+    ]);
+    $course = new TestCourse([
+        'id'         => 24,
+        'product_id' => $product->getKey(),
+    ]);
+    $course->exists = true;
+
+    app(CourseCommerceCheckoutService::class)->createOrderForCourse(9, $course);
+})->throws(CourseAlreadyPurchasedException::class);

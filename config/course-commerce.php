@@ -11,6 +11,10 @@ return [
         ],
     ],
 
+    'checkout' => [
+        'prevent_duplicate_purchase' => true,
+    ],
+
     'access' => [
         'free_course_flags' => [
             'isFree',
