@@ -9,7 +9,7 @@
         "illuminate/database": "^11.0|^12.0|^13.0",
         "illuminate/support": "^11.0|^12.0|^13.0",
         "lalalili/commerce-core": "*",
-        "lalalili/course-core": "^0.2",
+        "lalalili/course-core": "^0.2|^0.3|^0.4",
         "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
