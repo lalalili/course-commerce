@@ -22,7 +22,7 @@ class CommerceCourseProductResolver implements CourseProductResolver
             $productId = data_get($course, $foreignKey);
 
             if (filled($productId)) {
-                return $this->productModel()::query()->find($productId);
+                return $this->productModel()::query()->whereKey($productId)->first();
             }
         }
 
