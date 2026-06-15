@@ -62,3 +62,11 @@ Purchase status helpers are available through:
 app(Lalalili\CourseCommerce\Support\CourseCommercePurchaseStatusService::class)
     ->status($user, $course);
 ```
+
+## Tests
+
+From the package directory:
+
+```bash
+./vendor/bin/pest
+```
