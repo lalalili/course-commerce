@@ -1,0 +1,10 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    uses: lalalili/.github/.github/workflows/php-package-release.yml@main
+    secrets: inherit
