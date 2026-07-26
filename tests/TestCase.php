@@ -36,7 +36,7 @@ abstract class TestCase extends OrchestraTestCase
             $table->timestamps();
         });
 
-        $this->loadMigrationsFrom(__DIR__.'/../../commerce-core/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../vendor/lalalili/commerce-core/database/migrations');
         DB::statement('PRAGMA foreign_keys = ON');
     }
 
