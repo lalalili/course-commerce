@@ -31,21 +31,12 @@
     },
     "repositories": [
         {
-            "type": "path",
-            "url": "../commerce-core",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "lalalili/commerce-core": "1.0.0"
-                }
-            }
+            "type": "vcs",
+            "url": "https://github.com/lalalili/commerce-core.git"
         },
         {
-            "type": "path",
-            "url": "../course-core",
-            "options": {
-                "symlink": true
-            }
+            "type": "vcs",
+            "url": "https://github.com/lalalili/course-core.git"
         }
     ],
     "extra": {
@@ -60,8 +51,6 @@
         "analyse": "phpstan analyse --configuration=phpstan.neon.dist --no-progress",
         "format": "pint"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true,
