@@ -1,8 +1,66 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'composer.json'
+      - 'phpstan.neon.dist'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'config/**'
+      - 'composer.json'
+      - 'phpstan.neon.dist'
+      - '.github/workflows/ci.yml'
 
 jobs:
-  ci:
-    uses: lalalili/.github/.github/workflows/php-package-ci.yml@main
-    secrets: inherit
+  quality:
+    name: php8.4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: course-commerce
+
+      - name: Checkout commerce-core
+        uses: actions/checkout@v4
+        with:
+          repository: lalalili/commerce-core
+          path: commerce-core
+
+      - name: Checkout course-core
+        uses: actions/checkout@v4
+        with:
+          repository: lalalili/course-core
+          path: course-core
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: course-commerce
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Validate composer
+        working-directory: course-commerce
+        run: composer validate --strict --no-check-publish
+
+      - name: Tests
+        working-directory: course-commerce
+        run: composer test
+
+      - name: Check formatting
+        working-directory: course-commerce
+        run: composer format -- --test
+
+      - name: Static analysis
+        working-directory: course-commerce
+        run: composer analyse
